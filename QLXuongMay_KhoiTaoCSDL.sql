@@ -80,7 +80,7 @@ create table NHANVIEN (
 	GioiTinh bit not null,
 	NgaySinh date not null,
 	DiaChi nvarchar(100) not null,
-	Email nvarchar(100),
+	Email varchar(100),
 	SoDienThoai char(11) not null,
 	TrinhDoHocVan varchar(5) not null,
 	CCCD_CMT varchar(20) not null,
@@ -175,55 +175,83 @@ create table NHANVIEN_DIEMDANH (
 	constraint FK_NhanVienDiemDanh_DiemDanh foreign key (ThoiGianDiemDanh, ThoiGianKetThuc) references DIEMDANH(ThoiGianDiemDanh, ThoiGianKetThuc)
 )
 
---Tạo bảng KHACHHANG
+/*
+	Bảng lưu trữ thông tin khách hàng
+- MaKH: Khóa chính của bảng, thể hiện tính độc nhất của khách hàng
+- HinhDaiDien: Ảnh đại diện của khách hàng
+- HoTen: Họ tên của khách hàng, có thể dùng tiếng Việt có dấu
+- GioiTinh: Lưu trữ giới tính khách hàng - 0 là nam, 1 là nữ
+- NgaySinh: Ngày sinh của khách hàng, định dạng mặc định là yyyy/mm/dd
+- DiaChi: Địa chỉ nơi ở hiện tại của khách hàng, có thể sử dụng dấu
+- Email: Lưu trữ địa chỉ email của khách hàng
+- SoDienThoai: Lưu trữ số điện thoại của khách hàng
+*/
 create table KHACHHANG (
 	MaKH char(10) primary key,
-	HoTen nvarchar(100),
-	GioiTinh nchar(10),
-	NgaySinh date,
-	DiaChi nvarchar(100),
-	SoDienThoai char(15)
+	HinhDaiDien Image,
+	HoTen nvarchar(100) not null,
+	GioiTinh bit not null,
+	NgaySinh date not null,
+	DiaChi nvarchar(100) not null,
+	Email varchar(100),
+	SoDienThoai char(11) not null,
 );
 
---XÓA: bảng MAUSAC
+/*
+	Bảng lưu trữ thông tin của kho hàng
+*/
+create table KHOHANG (
+	MaKho char(10) primary key
+	SoLuongTon int not null
+);
 
---Tạo bảng SANPHAM
+/*
+	Bảng lưu trữ thông tin sản phẩm
+- MaSP: Khóa chính của bảng, thể hiện tính độc nhất của sản phẩm
+- TenSP: Tên sản phẩm, có thể dùng tiếng Việt có dấu
+- KichThuoc: Kích thước của sản phẩm tương ứng loại sản phẩm
+- MauSac: Màu sắc thể hiện bên ngoài của sản phẩm
+- GiaThanh: Giá tiền gốc của sản phẩm
+- LoaiSP: Loại hình sản phẩm (Áo/Quần/Váy/Giày/Túi xách)
+*/
 create table SANPHAM (
 	MaSP char(10) primary key,
-	TenSP nvarchar(100),
-	KichThuoc varchar(50),
-	MauSac nvarchar(100),
+	TenSP nvarchar(100) not null,
+	KichThuoc varchar(50) not null,
+	MauSac nvarchar(100) not null,
 	GiaThanh int default 100000,
-	LoaiSP nvarchar(50),
+	LoaiSP nvarchar(50) not null,
+	constraint FK_SANPHAM_KHOHANG foreign key (MaSP) references KHOHANG (MaKho) on delete cascade
 );
 
---Tạo bảng KHOHANG
-create table KHOHANG (
-	MaSP char(10) foreign key references SANPHAM(MaSP),
-	SoLuongTon int,
-	constraint PK_KHOHANG primary key (MaSP)
-);
-
---Tạo bảng DONHANG
-create table DONHANG(
+/*
+	Bảng lưu trữ thông tin Đơn hàng
+- MaDH: Khóa chính của bảng, thể hiện tính độc nhất của 1 đơn hàng
+- NgayDatHang: Thời gian đặt hàng của khách hàng
+- TrangThai: Đã thanh toán hoặc chưa thanh toán
+- MaKH: Mã khách hàng chịu trách nhiệm hoàn thành đơn hàng
+- MaNV: Mã nhân viên chịu trách nhiệm cho việc lập đơn hàng
+*/
+create table DONHANG (
 	MaDH char(10) primary key,
-	NgayDatHang date,
-	TrangThai nvarchar(20),
-	MaKH char(10) foreign key references KHACHHANG(MaKH),
-	MaNV char(10) foreign key references NHANVIEN(MaNV)
+	ThoiGianDatHang date default GetDate(),
+	TrangThai nvarchar(20) not null,
+	MaKH char(10) foreign key references KHACHHANG(MaKH) on delete cascade,
+	MaNV char(10) foreign key references NHANVIEN(MaNV) on delete cascade
 );
 
---Tạo bảng HOADON thể hiện mối quan hệ nhiều nhiều giữa 2 bảng DONHANG và SANPHAM
+/*
+	Bảng thể hiện quan hệ nhiều nhiều giữa Sản phẩm và Hóa đơn
+- MaHD, MaSP: Khóa chính của bảng gồm 2 thuộc tính Mã hóa đơn, Mã sản phẩm
+- SoLuong: Số lượng của sản phẩm được đặt mua
+- KhuyenMai: Khuyến mãi của đơn hàng
+*/
 create table HOADON (
-	--THÊM: Mã hóa đơn
-	MaHD char(10),
-	MaSP char(10),
 	MaDH char(10),
-	SoLuong int,
-	TongTien int,
-	KhuyenMai int,
-	--SỬA: Khóa chính gồm Mã hóa đơn và mã đơn hàng
-	constraint PK_DONHANG_SANPHAM primary key (MaHD, MaDH),
-	constraint FK_SANPHAM foreign key (MaSP) references SANPHAM(MaSP),
-	constraint FK_DONHANG foreign key (MaDH) references DONHANG(MaDH)
+	MaSP char(10), 
+	SoLuong int not null,
+	KhuyenMai float default 0,
+	constraint PK_HoaDon primary key (MaDH, MaSP),
+	constraint FK_HoaDon_DonHang foreign key (MaDH) references DONHANG(MaDH) on delete cascade,
+	constraint FK_HoaDon_SanPham foreign key (MaSP) references SANPHAM(MaSP) on delete cascade
 );
