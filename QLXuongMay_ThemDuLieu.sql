@@ -7,8 +7,8 @@
 ---------------------------
 -->>>>THÊM DỮ LIỆU MẪU<<<--
 ---------------------------
---Khâu tổ chức: Phòng ban --> Chức vụ --> Nhân viên --> Lương --> Công việc --> Điểm danh
---Khâu bán hàng: Khách hàng --> Sản phẩm --> Kho hàng --> Đơn hàng --> Hóa đơn
+--Khâu tổ chức: PHONGBAN --> CHUCVU --> NHANVIEN --> NHANVIEN_LUONG --> CONGVIEC --> DIEMDANH --> NHANVIEN_DIEMDANH
+--Khâu bán hàng: KHACHHANG --> KHOHANG --> SANPHAM --> DONHANG --> HOADON
 
 use QLXuongMay;
 go
@@ -23,7 +23,10 @@ insert into PHONGBAN values
 	('PB001', N'Phòng nhân sự', 'Chi nhánh Quận 10'),
 	('PB002', N'Phòng sản phẩm', 'Chi nhánh Quận 3'),
 	('PB003', N'Phòng tài chính', 'Chi nhánh Hóc Môn'),
-	('PB004', N'Phòng dịch vụ', 'Chi nhánh Tân Bình')
+	('PB004', N'Phòng dịch vụ', 'Chi nhánh Tân Bình'),
+	('PB005', 'Phong Ban A', N'69 Hai Bà Trưng,P.Bến Nghé, Quận 1,TPHCM'),
+    ('PB006', 'Phong Ban B', N'32 Võ Thị Sáu,Quận 3,TPHCM'),
+    ('PB007', 'Phong Ban C', N'868 Su Van Hanh,Quận 10,TPHCM');
 
 ------------------------------
 -->>>>QUY TẮC THÊM CHUCVU<<<--
@@ -34,7 +37,11 @@ insert into PHONGBAN values
 --Hệ số thưởng: Hệ số thực (0.5 --> 1.2)
 --Loại chức vụ: Trưởng phòng/Quản lý/Giám đốc/Phó giám đốc/Nhân viên
 insert into CHUCVU values
-	('CN001', N'Nhân viên thời vụ', 1.1, 0.5, N'Nhân viên')
+	('CN001', N'Nhân viên thời vụ', 1.1, 0.5, N'Bán thời gian'),
+	('CN002', N'Nhân viên may',1.2, 0.5, N'Toàn thời gian'),
+    ('TP003', N'Nhà Thiết kế' ,1.5, 0.8, N'Toàn thời gian'),
+    ('GD004', N'Giám đốc', 2.5, 0.9, N'Toàn thời gian'),
+	('CN005', N'Nhân viên thời vụ', 2.5, 0.9, N'Bán thời gian');
 
 --------------------------------
 -->>>>QUY TẮC THÊM NHANVIEN<<<--
@@ -47,9 +54,48 @@ insert into CHUCVU values
 --Số điện thoại: Tối đa 15 ký tự
 --Mã phòng ban: Mã phòng ban chính xác nơi nhân viên đang làm việc tại
 --Mã chức vụ: Mã chức vụ chính xác chức vụ nhân viên đang đảm nhận
+--Mã trưởng phòng: Xác định nhân viên đang nắm giữ chức trưởng phòng
 
 insert into NHANVIEN values
-	('NV001', N'Phùng Quang Long', N'Nam', '2003-10-17', N'153 Nam Kỳ Khởi Nghĩa', '0763615414', 'PB001', 'CN001', null)
+	('NV001', null, N'Phùng Quang Long', 0, '2003-10-17', N'153 Nam Kỳ Khởi Nghĩa', null, '0763615414', 'DH', '089203331111', 'PB001', 'CN001', null)
+
+---------------------------------------------
+-->>>>QUY TẮC THÊM LUONG, NHANVIEN_LUONG<<<--
+---------------------------------------------
+
+insert into LUONG values
+	('2023-7-13', null, null, null)
+
+insert into NHANVIEN_LUONG values
+	('NV001', '2023-7-13')
+
+--------------------------------
+-->>>>QUY TẮC THÊM CONGVIEC<<<--
+--------------------------------
+
+insert into CONGVIEC values
+	('CV001', 'PB001', 'CN001', N'Lao động', N'Nhiều chân tay', '2023-7-13', '2023-7-14', 20, null)
+
+-----------------------------------------
+-->>>>QUY TẮC THÊM NHANVIEN_CONGVIEC<<<--
+-----------------------------------------
+
+insert into NHANVIEN_CONGVIEC values
+	('NV001', 'CV001')
+
+--------------------------------
+-->>>>QUY TẮC THÊM DIEMDANH<<<--
+--------------------------------
+
+insert into DIEMDANH values
+	('2023-7-13', '2023-7-14')
+
+-----------------------------------------
+-->>>>QUY TẮC THÊM NHANVIEN_DIEMDANH<<<--
+-----------------------------------------
+
+insert into NHANVIEN_DIEMDANH values
+	('NV001', '2023-7-13', '2023-7-14')
 
 ---------------------------------
 -->>>>QUY TẮC THÊM KHACHHANG<<<--
@@ -60,28 +106,18 @@ insert into NHANVIEN values
 --Ngày sinh: Phải là ngày tháng có thật, đúng cú pháp: 'yyyy-mm-dd'
 --Địa chỉ: Địa chỉ có dấu
 --Số điện thoại: Tối đa 15 ký tự
+
 insert into KHACHHANG values
-	('KH001', N'Phùng Quang Long', N'Nam', '2003-10-17', N'828 Sự Vạn Hạnh, Phường 13, Quận 10, Tp. Hồ Chí Minh', '0763123123')
+	('KH001', null, N'Quang Long', 0, '2003-10-17', N'120 Lạc Long Quân, Phường 4, Quận Tân Bình', null, '0777333444')
 
 -------------------------------
 -->>>>QUY TẮC THÊM KHOHANG<<<--
 -------------------------------
 --Mã kho: K---, bắt đầu từ K001
 --Số lượng tồn: Số lượng còn lại của sản phẩm trong kho
-insert into KHOHANG values
-	('K001', 30)
 
--------------------------------
--->>>>QUY TẮC THÊM DONHANG<<<--
--------------------------------
---Mã đơn hàng: DH---, bắt đầu từ DH001
---Ngày đặt hàng: Phải là ngày tháng có thật, đúng cú pháp: 'yyyy-mm-dd'
---Số lượng: Số lượng đặt hàng
---Tổng tiền: Tổng số tiền của đơn hàng
---Trạng thái: Đã hủy/Đã thanh toán/Chưa thanh toán
---Mã khách hàng: Sử dụng chính xác mã khách hàng tham gia vào đơn hàng này
-insert into DONHANG values
-	('DH001', '2023-6-26', 5, 500000, N'Đã thanh toán', 'KH001')
+insert into KHOHANG values
+	('SP001', 30)
 
 -------------------------------
 -->>>>QUY TẮC THÊM SANPHAM<<<--
@@ -93,27 +129,22 @@ insert into DONHANG values
 --Giá thành: Sản phẩm phải không nhỏ hơn 100.000 và không vượt quá 5.000.000
 --Loại sản phẩm: Danh từ thể hiện loại con của sản phẩm (VD: Áo thun, Áo tay dài, Quần cộc, quần đùi, quần dài, Giày cao gót)
 --Mã kho: Sử dụng chính xác mã kho nơi tồn trữ sản phẩm này
+
 insert into SANPHAM values
-	('A001', N'Áo thun mùa hè', 'S', N'Trắng', 500000, N'Áo thun', 'K001'),
-	('A002', N'Áo tay ngắn chống nhiệt', 'XL', N'Đen', 600000, N'Áo tay ngắn', 'K001'),
-	('A003', N'Áo tay dài mùa đông', 'XL', N'Kem', 400000, N'Áo tay dài', 'K001'),
-	('A004', N'Áo thun in hình khủng long', 'S', N'Trắng sữa', 1000000, N'Áo thun', 'K001'),
-	('A005', N'Áo thời trang mùa thu cho bé', 'XXL', N'Hồng', 800000, N'Áo tay dài', 'K001'),
-	('Q001', N'Quần thun mùa hè', 'S', N'Trắng', 150000, N'Quần thun', 'K001'),
-	('Q002', N'Quần đùi họa tiết caro', 'S', N'Trắng', 350000, N'Quần đùi', 'K001'),
-	('Q003', N'Quần tây nhân viên văn phòng', 'S', N'Trắng', 250000, N'Quần tây', 'K001'),
-	('Q004', N'Quần jeans quá cỡ', 'XXXL', N'Trắng', 300000, N'Quần jeans', 'K001'),
-	('Q005', N'Quần thun có túi', 'S', N'Trắng', 500000, N'Quần thun', 'K001'),
-	('G001', N'Giày đế dài', 'S', N'Trắng', 500000, N'Giày đế dài', 'K001'),
-	('G002', N'Giày tây', 'S', N'Trắng', 500000, N'Giày tây', 'K001'),
-	('G003', N'Giày cao gót', 'S', N'Trắng', 500000, N'Giày cao gót', 'K001'),
-	('G004', N'Giày búp bê', 'S', N'Trắng', 500000, N'Giày búp bê', 'K001'),
-	('G005', N'Giày đi nước', 'S', N'Trắng', 500000, N'Giày sinh hoạt', 'K001'),
-	('T001', N'Túi xách nhãn Gucci', 'S', N'Trắng', 500000, N'Túi xách', 'K001'),
-	('T002', N'Túi da bò chống nhiệt', 'S', N'Trắng', 500000, N'Túi chống nhiệt', 'K001'),
-	('T003', N'Túi cao su đi chợ cho các bà mẹ', 'S', N'Trắng', 500000, N'Túi sinh hoạt', 'K001'),
-	('T004', N'Túi nhiều ngăn đa năng', 'S', N'Trắng', 500000, N'Túi sinh hoạt', 'K001'),
-	('T005', N'Túi thông khí đựng thực phẩm', 'S', N'Trắng', 500000, N'Túi sinh hoạt', 'K001')
+	('SP001', N'Áo thun mùa hè', 'S', N'Trắng', 500000, N'Áo thun')
+
+-------------------------------
+-->>>>QUY TẮC THÊM DONHANG<<<--
+-------------------------------
+--Mã đơn hàng: DH---, bắt đầu từ DH001
+--Ngày đặt hàng: Phải là ngày tháng có thật, đúng cú pháp: 'yyyy-mm-dd'
+--Số lượng: Số lượng đặt hàng
+--Tổng tiền: Tổng số tiền của đơn hàng
+--Trạng thái: Đã hủy/Đã thanh toán/Chưa thanh toán
+--Mã khách hàng: Sử dụng chính xác mã khách hàng tham gia vào đơn hàng này
+
+insert into DONHANG values
+	('DH001', '2023-1-22', N'Chưa thanh toán', 'KH001', 'NV001')
 
 ------------------------------
 -->>>>QUY TẮC THÊM HOADON<<<--
@@ -121,6 +152,4 @@ insert into SANPHAM values
 --Mã sản phẩm: Mã sản phẩm được sử dụng trên hóa đơn này
 --Mã đơn hàng: Mã đơn hàng được sử dụng trên hóa đơn này
 insert into HOADON values
-	('A001', 'DH001'),
-	('Q001', 'DH001'),
-	('T001', 'DH001')
+	('DH001', 'SP001', 10, null)

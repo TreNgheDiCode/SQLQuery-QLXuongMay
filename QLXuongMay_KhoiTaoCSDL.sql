@@ -127,8 +127,8 @@ create table NHANVIEN_LUONG (
 */
 create table CONGVIEC (
 	MaCongViec char(10) primary key,
-	MaPhongBan char(10),
-	MaChucVu char(10),
+	MaPhongBan char(10) not null,
+	MaChucVu char(10) not null,
 	TenCongViec nvarchar(100) not null,
 	NoiDungCongViec nvarchar(max) not null,
 	NgayBatDau datetime2 not null,
@@ -201,7 +201,7 @@ create table KHACHHANG (
 	Bảng lưu trữ thông tin của kho hàng
 */
 create table KHOHANG (
-	MaKho char(10) primary key
+	MaKho char(10) primary key,
 	SoLuongTon int not null
 );
 
@@ -235,7 +235,7 @@ create table SANPHAM (
 create table DONHANG (
 	MaDH char(10) primary key,
 	ThoiGianDatHang date default GetDate(),
-	TrangThai nvarchar(20) not null,
+	TrangThai nvarchar(20) default N'Chưa Thanh Toán',
 	MaKH char(10) foreign key references KHACHHANG(MaKH) on delete cascade,
 	MaNV char(10) foreign key references NHANVIEN(MaNV) on delete cascade
 );
