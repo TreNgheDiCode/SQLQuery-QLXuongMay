@@ -35,7 +35,7 @@ go
 - TenPB: Tên phòng ban, có thể dùng tiếng Việt có dấu
 - DiaChi: Lưu trữ thông tin địa chỉ của phòng ban
 */
-create table PHONGBAN (
+create table PHONGBAN ( 
 	MaPB char(10) primary key,
 	TenPB nvarchar(100) not null,
 	DiaChi nvarchar(100) not null
@@ -72,10 +72,10 @@ create table CHUCVU (
 - MaPB: Mà phòng tham chiếu phòng ban nhân viên
 - MaCV: Mã chức vụ tham chiếu công việc nhân viên
 - MaTruongPhong: Mã định danh nhân viên là trưởng phòng hoặc không
-*/
+*/  
 create table NHANVIEN (
 	MaNV char(10) primary key,
-	HinhDaiDien Image,
+	HinhDaiDien nvarchar(max),
 	HoTen nvarchar(100) not null,
 	GioiTinh bit not null,
 	NgaySinh date not null,
@@ -83,7 +83,6 @@ create table NHANVIEN (
 	Email varchar(100),
 	SoDienThoai char(11) not null,
 	TrinhDoHocVan varchar(5) not null,
-	CCCD_CMT varchar(20) not null,
 	MaPB char(10) foreign key references PHONGBAN(MaPB) on delete cascade,
 	MaCV char(10) foreign key references CHUCVU(MaCV) on delete cascade,
 	MaTruongPhong char(10) foreign key references NHANVIEN(MaNV) default null
@@ -95,22 +94,11 @@ create table NHANVIEN (
 - LuongCung: Lương cứng của nhân viên (Được tính bằng công thức Lương cơ bản [Khởi tạo chung] * Hệ số lương [Chức vụ] * Số giờ làm [Bảng NhanVienDiemDanh]
 */
 create table LUONG (
-	NgayNhanLuong datetime2 primary key,
+	NgayNhanLuong datetime2,
+	MaNV char(10),
 	LuongCung int default 0,
 	LuongThuong int default 0,
 	LuongPhat int default 0,
-);
-
-/*
-	Bảng thể hiện quan hệ nhiều nhiều giữa Nhân viên và Lương
-- MaNV, NgayNhanLuong: Khóa chính của bảng gồm 2 thuộc tính là Mã nhân viên và Ngày nhận lương
-*/
-create table NHANVIEN_LUONG (
-	MaNV char(10),
-	NgayNhanLuong datetime2 default GETDATE(),
-	constraint PK_NhanVien_Luong primary key (MaNV, NgayNhanLuong),
-	constraint FK_NhanVienLuong_NhanVien foreign key (MaNV) references NHANVIEN(MaNV),
-	constraint FK_NhanVienLuong_Luong foreign key (NgayNhanLuong) references LUONG(NgayNhanLuong)
 );
 
 /*
@@ -131,10 +119,7 @@ create table CONGVIEC (
 	MaChucVu char(10) not null,
 	TenCongViec nvarchar(100) not null,
 	NoiDungCongViec nvarchar(max) not null,
-	NgayBatDau datetime2 not null,
-	NgayKetThuc datetime2 not null,
 	SoLuong int not null,
-	SoNguoiNhan int default 0,
 	constraint FK_CongViec_PhongBan foreign key (MaPhongBan) references PHONGBAN(MaPB) on delete cascade,
 	constraint FK_CongViec_ChucVu foreign key (MaChucVu) references CHUCVU(MaCV) on delete cascade
 );
@@ -146,6 +131,8 @@ create table CONGVIEC (
 create table NHANVIEN_CONGVIEC (
 	MaNV char(10),
 	MaCV char(10),
+	NgayBatDau datetime2 not null,
+	NgayKetThuc datetime2 not null,
 	constraint PK_NhanVien_CongViec primary key (MaNV, MaCV),
 	constraint FK_NhanVienCongViec_NhanVien foreign key (MaNV) references NHANVIEN(MaNV),
 	constraint FK_NhanVienCongViec_CongViec foreign key (MaCV) references CONGVIEC(MaCongViec)
@@ -170,6 +157,7 @@ create table NHANVIEN_DIEMDANH (
 	MaNV char(10),
 	ThoiGianDiemDanh datetime2,
 	ThoiGianKetThuc datetime2,
+	SoGioLam int,
 	constraint PK_NhanVien_DiemDanh primary key (MaNV, ThoiGianDiemDanh, ThoiGianKetThuc),
 	constraint FK_NhanVienDiemDanh_NhanVien foreign key (MaNV) references NHANVIEN(MaNV),
 	constraint FK_NhanVienDiemDanh_DiemDanh foreign key (ThoiGianDiemDanh, ThoiGianKetThuc) references DIEMDANH(ThoiGianDiemDanh, ThoiGianKetThuc)
@@ -188,7 +176,7 @@ create table NHANVIEN_DIEMDANH (
 */
 create table KHACHHANG (
 	MaKH char(10) primary key,
-	HinhDaiDien Image,
+	HinhDaiDien nvarchar(max),
 	HoTen nvarchar(100) not null,
 	GioiTinh bit not null,
 	NgaySinh date not null,
@@ -232,13 +220,13 @@ create table SANPHAM (
 - MaKH: Mã khách hàng chịu trách nhiệm hoàn thành đơn hàng
 - MaNV: Mã nhân viên chịu trách nhiệm cho việc lập đơn hàng
 */
-create table DONHANG (
+create table DONHANG ( 
 	MaDH char(10) primary key,
 	ThoiGianDatHang date default GetDate(),
 	TrangThai nvarchar(20) default N'Chưa Thanh Toán',
 	MaKH char(10) foreign key references KHACHHANG(MaKH) on delete cascade,
 	MaNV char(10) foreign key references NHANVIEN(MaNV) on delete cascade
-);
+); 
 
 /*
 	Bảng thể hiện quan hệ nhiều nhiều giữa Sản phẩm và Hóa đơn

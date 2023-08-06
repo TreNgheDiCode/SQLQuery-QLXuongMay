@@ -112,12 +112,203 @@ alter table DONHANG
 --------------------------------
 -->>>>RÀNG BUỘC VỚI TRIGGER<<<--
 --------------------------------
+--Khi xóa dữ liệu trong bảng sản phẩm, nếu sản phẩm đó có trong bảng hóa đơn thì không cho xóa.
+GO
+CREATE TRIGGER TG_1
+ON SANPHAM
+FOR DELETE
+AS
+BEGIN
+	DECLARE @MASP CHAR(10)
+	SELECT @MASP=MaSP FROM deleted
+	IF EXISTS (SELECT *
+				FROM HOADON
+				WHERE @MASP=MaSP)
+	BEGIN
+			ROLLBACK TRAN
+			RAISERROR (N'KHÔNG THỂ XÓA',16,1)
+	END
+END
+
+DELETE FROM SANPHAM WHERE MaSP='SP001'
+
+
+DROP TRIGGER TG_1
+select * from KHACHHANG
+select * from DONHANG
+
+
+
+--Khi thêm hoặc sửa dữ liệu trong bảng sản phẩm, đơn giá phải lớn hơn 1000.
+GO
+CREATE TRIGGER TG_2
+ON SANPHAM
+FOR INSERT, UPDATE
+AS
+BEGIN
+		DECLARE @GiaThanh int
+		SELECT @GiaThanh=GiaThanh FROM inserted
+		if @GiaThanh <1000
+			BEGIN
+				ROLLBACK TRAN
+				RAISERROR (N'GIÁ CỦA SẢN PHẨM PHẢI LỚN HƠN 1000',16,1)
+			END
+END
+
+INSERT INTO SANPHAM
+VALUES ('SP006', N'Áo Croptop', 'S', N'Trắng', 100, N'Áo')
+
+DELETE FROM SANPHAM WHERE MaSP='SP006'
+
+DROP TRIGGER TG_2
+
+--Khi thêm hoặc sửa dữ liệu trong bảng sản phẩm, tên sản phẩm không được trùng nhau.
+GO
+CREATE TRIGGER TG_3
+ON SANPHAM
+FOR INSERT, UPDATE
+AS
+BEGIN
+		DECLARE @TENSP NVARCHAR(100)
+		DECLARE @COUNT INT
+		SET @COUNT =0
+		SELECT @TENSP=TenSP FROM inserted
+		
+		SELECT @COUNT=COUNT(*)
+		FROM SANPHAM
+		WHERE @TENSP=TenSP
+
+		IF @COUNT>1
+		BEGIN
+			ROLLBACK TRAN
+			RAISERROR (N'TÊN SẢN PHẨM KHÔNG ĐƯỢC TRÙNG NHAU',16,1)
+		END
+END
+
+INSERT INTO SANPHAM
+VALUES ('SP007', N'Áo thun', 'M', N'Denim', 150000, N'Áo')
+
+
+select* from KHACHHANG
+select* from SANPHAM
+
+
+--Khi thêm một hóa đơn mới thì mã sản phẩm phải có trong bảng sản phẩm và mã khách hàng phải có trong bảng khách hàng.
+
+
+--Khi thêm hoặc sửa dữ liệu trong bảng HoaDon , Khuyến mãi không được vượt quá 50000.
+GO
+CREATE TRIGGER TG_5 
+ON HOADON
+FOR INSERT, UPDATE
+AS
+BEGIN
+		DECLARE @KHUYENMAI INT
+		SELECT @KHUYENMAI=KhuyenMai from inserted
+		IF @KHUYENMAI>50000
+		BEGIN
+			ROLLBACK TRAN
+			RAISERROR (N'KHUYỄN MÃI KHÔNG ĐƯỢC VƯỢT QUÁ 50000',16,1)
+		END
+END
+INSERT INTO HOADON (MaHD, MaSP, MaDH, SoLuong, TongTien, KhuyenMai)
+VALUES ('HD003', 'SP001', 'DH001', 2, 300000, 20000)
+
+DROP TRIGGER TG_5
 
 
 -----------------------------------------
 -->>>>RÀNG BUỘC VỚI STORED PROCEDURE<<<--
 -----------------------------------------
+--Viết thủ tục nhập vào mã sản phẩm, xuất ra tổng số tiền bán của sản phẩm đó. Biết rằng số tiền = số lượng * với đơn giá	
+GO
+CREATE PROC CR_1 @MASP CHAR(10)
+AS
+BEGIN
+	SELECT SANPHAM.MaSP, TenSP, SUM(SoLuong*GiaThanh) AS GIA
+	FROM SANPHAM, HOADON
+	WHERE SANPHAM.MaSP=HOADON.MaSP AND @MASP=SANPHAM.MaSP AND @MASP=HOADON.MaSP 
+	GROUP BY SANPHAM.MaSP, TenSP
+END
+EXEC CR_1 'SP001';
+DROP PROC CR_1
+		
+SELECT * FROM HOADON
+						
+--Viết thủ tục nhận vào giá sản phẩm, xuất ra thông tin sản phẩm có giá lớn hơn giá nhập vào						
+GO
+CREATE PROC CR_2 @GiaThanh int
+AS
+BEGIN
+	SELECT *
+	FROM SANPHAM
+	WHERE @GiaThanh<GiaThanh
+END
 
+EXEC CR_2 120000;
+DROP PROC CR_2
+
+--Viết thủ tục nhập vào mã sản phẩm, xuất ra tổng số lượng bán của sản phẩm đó.						
+GO
+CREATE PROC CR_3 @MASP CHAR(10)
+AS
+BEGIN
+	SELECT MaSP, SUM(SOLUONG) AS SLBAN
+	FROM HOADON
+	WHERE @MASP=MaSP
+	GROUP BY MaSP
+
+END
+EXEC CR_3 'SP001';
+DROP PROC CR_3
+
+SELECT * FROM HOADON
+
+
+--Nhận vào tham số là MaSP, trả về MaKH và số lượng mua của khách hàng mua sản phẩm đó nhiều nhất.
+GO
+CREATE PROC PR_4 @MASP CHAR(10)
+AS
+BEGIN
+	SELECT top 1 MaKH, sum(SOLUONG) as SL
+	FROM HOADON,DONHANG
+	WHERE HOADON.MaDH=DONHANG.MaDH  AND @MASP=MaSP
+	GROUP BY MaKH
+END
+EXEC PR_4 'SP001';
+DROP PROC PR_4
+SELECT * FROM HOADON
+SELECT * FROM DONHANG		
+SELECT * FROM SANPHAM
+
+
+--Nhận vào tham số là ngày, trả về MaKH và số tiền mua hàng của khách hàng của khách hàng mua nhiều tiền nhất.
+GO
+CREATE PROC PR_5 @NGAY DATE
+AS
+BEGIN
+	SELECT TOP 1 MaKH, sum(SoLuong*GiaThanh) AS THANHTIEN
+	FROM DONHANG, HOADON, SANPHAM
+	WHERE DONHANG.MaDH=HOADON.MaDH and @NGAY=NgayDatHang AND SANPHAM.MaSP=HOADON.MaSP
+	GROUP BY MaKH
+END
+
+EXEC PR_5 '2023-07-01';
+DROP PROC PR_5
+
+
+--Nhận tham số đầu vào là ngày, trả về tổng số tiền bán tất cả sản phẩm trong ngày.
+GO
+CREATE PROC PR_6 @NGAY DATE
+AS
+BEGIN
+	SELECT SUM(SoLuong*GiaThanh-KhuyenMai) AS TONGTIEN
+	FROM HOADON, SANPHAM, DONHANG
+	WHERE @NGAY=NgayDatHang AND HOADON.MaDH=DONHANG.MaDH AND SANPHAM.MaSP=HOADON.MaSP
+END
+
+EXEC PR_6 '2023-07-01';
+DROP PROC PR_6
 --------------------------------------------
 -->>>>THAO TÁC VỚI HÀM SỰ KIỆN VÀ XỬ LÝ<<<--
 --------------------------------------------
