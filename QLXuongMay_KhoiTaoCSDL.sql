@@ -99,6 +99,8 @@ create table LUONG (
 	LuongCung int default 0,
 	LuongThuong int default 0,
 	LuongPhat int default 0,
+	constraint PK_Luong primary key (NgayNhanLuong, MaNV),
+	constraint FK_Luong_NhanVien foreign key (MaNV) references NHANVIEN(MaNV) 
 );
 
 /*
@@ -108,10 +110,7 @@ create table LUONG (
 - MaChucVu: Mã chức vụ (thay thế cho tác dụng điều kiện tối thiểu để được nhận công việc)
 - TenCongViec: Tiêu đề ngắn gọn thể hiện việc làm của công việc
 - NoiDungCongViec: Miêu tả chi tiết công việc
-- NgayBatDau: Ngày bắt đầu thực hiện công việc
-- NgayKetThuc: Ngày kết thúc công việc
 - SoLuong: Số lượng người có thể nhận công việc
-- SoNguoiNhan: Số lượng người theo thời gian thực đang nhận công việc
 */
 create table CONGVIEC (
 	MaCongViec char(10) primary key,
@@ -127,15 +126,17 @@ create table CONGVIEC (
 /*
 	Bảng thể hiện quan hệ nhiều nhiều giữa Nhân viên và Công việc
 - MaNV, MaCV: Khóa chính của bảng gồm các thuộc tính Mã nhân viên và Mã công việc
+- NgayBatDau: Ngày bắt đầu công việc
+- NgayKetThuc: Ngày kết thúc công việc
 */
-create table NHANVIEN_CONGVIEC (
+create table PHANCONG (
 	MaNV char(10),
 	MaCV char(10),
 	NgayBatDau datetime2 not null,
 	NgayKetThuc datetime2 not null,
 	constraint PK_NhanVien_CongViec primary key (MaNV, MaCV),
-	constraint FK_NhanVienCongViec_NhanVien foreign key (MaNV) references NHANVIEN(MaNV),
-	constraint FK_NhanVienCongViec_CongViec foreign key (MaCV) references CONGVIEC(MaCongViec)
+	constraint FK_PhanCong_NhanVien foreign key (MaNV) references NHANVIEN(MaNV),
+	constraint FK_PhanCong_CongViec foreign key (MaCV) references CONGVIEC(MaCongViec)
 )
 	
 /*
@@ -146,22 +147,12 @@ create table NHANVIEN_CONGVIEC (
 create table DIEMDANH (
 	ThoiGianDiemDanh datetime2 default GETDATE(),
 	ThoiGianKetThuc datetime2 default GETDATE(),
-	constraint PK_DIEMDANH primary key (ThoiGianDiemDanh, ThoiGianKetThuc)
-);
-
-/*
-	Bảng thể hiện quan hệ nhiều nhiều giữa Nhân viên và Điểm danh
-- MaNV, ThoiGianDiemDanh, ThoiGianKetThuc: Khóa chính của bảng gồm các thuộc tính Mã nhân viên, Thời gian điểm danh, Thời gian kết thúc
-*/
-create table NHANVIEN_DIEMDANH (
 	MaNV char(10),
-	ThoiGianDiemDanh datetime2,
-	ThoiGianKetThuc datetime2,
-	SoGioLam int,
-	constraint PK_NhanVien_DiemDanh primary key (MaNV, ThoiGianDiemDanh, ThoiGianKetThuc),
-	constraint FK_NhanVienDiemDanh_NhanVien foreign key (MaNV) references NHANVIEN(MaNV),
-	constraint FK_NhanVienDiemDanh_DiemDanh foreign key (ThoiGianDiemDanh, ThoiGianKetThuc) references DIEMDANH(ThoiGianDiemDanh, ThoiGianKetThuc)
-)
+	MaCV char(10),
+	constraint PK_DiemDanh primary key (ThoiGianDiemDanh, ThoiGianKetThuc),
+	constraint FK_DiemDanh_NhanVien foreign key (MaNV) references NHANVIEN(MaNV),
+	constraint FK_DiemDanh_CongViec foreign key (MaCV) references CONGVIEC(MaCongViec)
+);
 
 /*
 	Bảng lưu trữ thông tin khách hàng
@@ -186,21 +177,15 @@ create table KHACHHANG (
 );
 
 /*
-	Bảng lưu trữ thông tin của kho hàng
-*/
-create table KHOHANG (
-	MaKho char(10) primary key,
-	SoLuongTon int not null
-);
-
-/*
 	Bảng lưu trữ thông tin sản phẩm
 - MaSP: Khóa chính của bảng, thể hiện tính độc nhất của sản phẩm
 - TenSP: Tên sản phẩm, có thể dùng tiếng Việt có dấu
 - KichThuoc: Kích thước của sản phẩm tương ứng loại sản phẩm
 - MauSac: Màu sắc thể hiện bên ngoài của sản phẩm
 - GiaThanh: Giá tiền gốc của sản phẩm
-- LoaiSP: Loại hình sản phẩm (Áo/Quần/Váy/Giày/Túi xách)
+- LoaiSP: Loại hình sản phẩm (Áo/Quần/Váy/Giày/Túi xách),
+- NgayNhapKho: Ngày nhập kho,
+- SoLuongTon: Số lượng hàng tồn
 */
 create table SANPHAM (
 	MaSP char(10) primary key,
@@ -209,7 +194,8 @@ create table SANPHAM (
 	MauSac nvarchar(100) not null,
 	GiaThanh int default 100000,
 	LoaiSP nvarchar(50) not null,
-	constraint FK_SANPHAM_KHOHANG foreign key (MaSP) references KHOHANG (MaKho) on delete cascade
+	NgayNhapKho datetime default(getDate()),
+	SoLuongTon int
 );
 
 /*
@@ -226,7 +212,7 @@ create table DONHANG (
 	TrangThai nvarchar(20) default N'Chưa Thanh Toán',
 	MaKH char(10) foreign key references KHACHHANG(MaKH) on delete cascade,
 	MaNV char(10) foreign key references NHANVIEN(MaNV) on delete cascade
-); 
+);
 
 /*
 	Bảng thể hiện quan hệ nhiều nhiều giữa Sản phẩm và Hóa đơn

@@ -57,45 +57,44 @@ insert into CHUCVU values
 --Mã trưởng phòng: Xác định nhân viên đang nắm giữ chức trưởng phòng
 
 insert into NHANVIEN values
-	('NV001', null, N'Phùng Quang Long', 0, '2003-10-17', N'153 Nam Kỳ Khởi Nghĩa', null, '0763615414', 'DH', '089203331111', 'PB001', 'CN001', null)
+	('NV001', null, N'Phùng Quang Long', 0, '2003-10-17', N'153 Nam Kỳ Khởi Nghĩa', null, '0763615414', 'DH', 'PB001', 'CN001', null),
+	('NV002', null, N'Lương Thị Kỳ Duyên', 1, '1999-12-4', N'325 Tô Ký', 'kyduyen@gmail.com', '0732544321', 'THPT', 'PB002', 'TP003', 'NV002'),
+	('NV003', null, N'Cao Thị Kỳ Trâm', 1, '1974-5-20', N'23 Trường Chinh', 'kytram@gmail.com', '0336411352', 'DH', 'PB005', 'GD004', 'NV003'),
+	('NV004', null, N'Nguyễn Phúc Bảo', 0, '2000-7-23', N'36/12/5A Tố Hữu', null, '0135433764', 'DH', 'PB003', 'CN002', null),
+	('NV005', null, N'Đỗ Ngọc Phước', 0, '1996-3-5', N'325 Lê Văn Sỹ', 'ngocphuoc@gmail.com', '0763615414', 'DH', 'PB001', 'CN001', null)
 
 ---------------------------------------------
 -->>>>QUY TẮC THÊM LUONG, NHANVIEN_LUONG<<<--
 ---------------------------------------------
 
 insert into LUONG values
-	('2023-7-13', null, null, null)
-
-insert into NHANVIEN_LUONG values
-	('NV001', '2023-7-13')
+	('2023-7-13', 'NV001', 1200000, 500000, 0),
+	('2023-7-13', 'NV002', 1200000, 200000, 0),
+	('2023-7-13', 'NV003', 1700000, 600000, 0),
+	('2023-7-13', 'NV004', 1600000, 300000, 0),
+	('2023-7-13', 'NV005', 1300000, 500000, 0),
+	('2023-7-14', 'NV001', 1400000, 200000, 0)
 
 --------------------------------
 -->>>>QUY TẮC THÊM CONGVIEC<<<--
 --------------------------------
 
 insert into CONGVIEC values
-	('CV001', 'PB001', 'CN001', N'Lao động', N'Nhiều chân tay', '2023-7-13', '2023-7-14', 20, null)
+	('CV001', 'PB001', 'CN001', N'Lao động', N'Nhiều chân tay', 20)
 
 -----------------------------------------
 -->>>>QUY TẮC THÊM NHANVIEN_CONGVIEC<<<--
 -----------------------------------------
 
-insert into NHANVIEN_CONGVIEC values
-	('NV001', 'CV001')
+insert into PHANCONG values
+	('NV001', 'CV001', '2023-8-10', '2023-8-30')
 
 --------------------------------
 -->>>>QUY TẮC THÊM DIEMDANH<<<--
 --------------------------------
 
 insert into DIEMDANH values
-	('2023-7-13', '2023-7-14')
-
------------------------------------------
--->>>>QUY TẮC THÊM NHANVIEN_DIEMDANH<<<--
------------------------------------------
-
-insert into NHANVIEN_DIEMDANH values
-	('NV001', '2023-7-13', '2023-7-14')
+	('2023-7-13', '2023-7-14', 'NV001', 'CV001')
 
 ---------------------------------
 -->>>>QUY TẮC THÊM KHACHHANG<<<--
@@ -108,16 +107,7 @@ insert into NHANVIEN_DIEMDANH values
 --Số điện thoại: Tối đa 15 ký tự
 
 insert into KHACHHANG values
-	('KH001', null, N'Quang Long', 0, '2003-10-17', N'120 Lạc Long Quân, Phường 4, Quận Tân Bình', null, '0777333444')
-
--------------------------------
--->>>>QUY TẮC THÊM KHOHANG<<<--
--------------------------------
---Mã kho: K---, bắt đầu từ K001
---Số lượng tồn: Số lượng còn lại của sản phẩm trong kho
-
-insert into KHOHANG values
-	('SP001', 30)
+	('KH001', null, N'Quang Long', 0, '2003-10-17', N'120 Lạc Long Quân, Phường 4, Quận Tân Bình', 'quanglong@gmail.com', '0777333444')
 
 -------------------------------
 -->>>>QUY TẮC THÊM SANPHAM<<<--
@@ -131,7 +121,8 @@ insert into KHOHANG values
 --Mã kho: Sử dụng chính xác mã kho nơi tồn trữ sản phẩm này
 
 insert into SANPHAM values
-	('SP001', N'Áo thun mùa hè', 'S', N'Trắng', 500000, N'Áo thun')
+	('SP001', N'Áo thun mùa hè', 'S', N'Trắng', 500000, N'Áo thun', '2023-5-30', 25),
+	('SP002', N'Áo thun croptop', 'M', N'Đen', 200000, N'Áo thun', '2023-7-30', 20)
 
 -------------------------------
 -->>>>QUY TẮC THÊM DONHANG<<<--
@@ -152,4 +143,4 @@ insert into DONHANG values
 --Mã sản phẩm: Mã sản phẩm được sử dụng trên hóa đơn này
 --Mã đơn hàng: Mã đơn hàng được sử dụng trên hóa đơn này
 insert into HOADON values
-	('DH001', 'SP001', 10, null)
+	('DH001', 'SP001', 10, 0.3)

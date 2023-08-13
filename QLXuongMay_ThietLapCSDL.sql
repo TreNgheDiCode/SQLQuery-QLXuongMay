@@ -20,13 +20,13 @@ go
 ------------------------------
 /*
 - Đối với bảng KHACHHANG
-	○ Giới tính chỉ có thể là NAM hoặc NỮ (CK_KHACHHANG_KiemTraGioiTinh)
+	○ Giới tính chỉ có thể là NAM-0 hoặc NỮ-1 (CK_KHACHHANG_KiemTraGioiTinh)
 	○ Khách hàng phải trên 0 tuổi và không vượt quá 100 tuổi (CK_KHACHHANG_KiemTraSoTuoi)
 	○ Năm sinh của khách hàng không được vượt quá năm hiện tại (CK_KHACHHANG_KiemTraNamSinh)
 */
 alter table KHACHHANG
 	add constraint CK_KHACHHANG_KiemTraGioiTinh check (
-		GioiTinh in (N'Nam', N'Nữ')
+		GioiTinh in (0, 1)
 	),
 	constraint CK_KHACHHANG_KiemTraSoTuoi check (
 		year(getdate()) - year(NgaySinh) > 0 
@@ -50,7 +50,7 @@ alter table CHUCVU
 		HeSoThuong >= 0.5 and HeSoThuong <= 1.2
 	),
 	constraint CK_CHUCVU_KiemTraLoaiChucVu check (
-		LoaiCV in (N'Trưởng phòng', N'Quản lý', N'Giám đốc', N'Phó giám đốc', N'Nhân viên')
+		LoaiCV in (N'Bán thời gian', N'Toàn thời gian')
 	)
 
 /*
@@ -77,7 +77,7 @@ select * from NHANVIEN
 
 alter table NHANVIEN
 	add constraint CK_NHANVIEN_KiemTraGioiTinh check (
-		GioiTinh in (N'Nam', N'Nữ')
+		GioiTinh in (0, 1)
 	),
 	constraint CK_NHANVIEN_KiemTraSoTuoi check (
 		year(getdate()) - year(NgaySinh) >= 18 
@@ -97,7 +97,7 @@ alter table NHANVIEN
 
 alter table DONHANG
 	add constraint CK_DONHANG_KiemTraNgayDatHang check (
-		datediff(day, NgayDatHang, getdate()) >= 0
+		datediff(day, ThoiGianDatHang, getdate()) >= 0
 	),
 	constraint CK_DONHANG_KiemTraSoLuong check (
 		SoLuong > 0 and SoLuong <= 10
@@ -109,6 +109,15 @@ alter table DONHANG
 		TrangThai in (N'Đã thanh toán', N'Chưa thanh toán', N'Đã hủy')
 	)
 
+/*
+- Đối với bảng HOADON
+	○ Số lượng sản phẩm không được bằng 0 và không vượt quá 10 (CK_DONHANG_KiemTraSoLuong)
+*/
+
+alter table HOADON
+	add constraint CK_HOADON_KiemTraSoLuong check (
+		SoLuong > 0 and SoLuong <= 10
+	)
 --------------------------------
 -->>>>RÀNG BUỘC VỚI TRIGGER<<<--
 --------------------------------
@@ -135,9 +144,7 @@ DELETE FROM SANPHAM WHERE MaSP='SP001'
 
 DROP TRIGGER TG_1
 select * from KHACHHANG
-select * from DONHANG
-
-
+select * from HOADON
 
 --Khi thêm hoặc sửa dữ liệu trong bảng sản phẩm, đơn giá phải lớn hơn 1000.
 GO
@@ -151,12 +158,12 @@ BEGIN
 		if @GiaThanh <1000
 			BEGIN
 				ROLLBACK TRAN
-				RAISERROR (N'GIÁ CỦA SẢN PHẨM PHẢI LỚN HƠN 1000',16,1)
+				RAISERROR (N'GIÁ CỦA SẢN PHẨM PHẢI LỚN HƠN 100000',16,1)
 			END
 END
 
 INSERT INTO SANPHAM
-VALUES ('SP006', N'Áo Croptop', 'S', N'Trắng', 100, N'Áo')
+VALUES ('SP006', N'Áo Croptop', 'S', N'Trắng', 200000, N'Áo', '2023-8-10', 10)
 
 DELETE FROM SANPHAM WHERE MaSP='SP006'
 
@@ -186,13 +193,11 @@ BEGIN
 END
 
 INSERT INTO SANPHAM
-VALUES ('SP007', N'Áo thun', 'M', N'Denim', 150000, N'Áo')
+VALUES ('SP007', N'Áo croptop', 'M', N'Denim', 150000, N'Áo', '2023-8-10', 10)
 
 
-select* from KHACHHANG
-select* from SANPHAM
-
-
+select * from KHACHHANG
+select * from SANPHAM
 --Khi thêm một hóa đơn mới thì mã sản phẩm phải có trong bảng sản phẩm và mã khách hàng phải có trong bảng khách hàng.
 
 
@@ -205,14 +210,15 @@ AS
 BEGIN
 		DECLARE @KHUYENMAI INT
 		SELECT @KHUYENMAI=KhuyenMai from inserted
-		IF @KHUYENMAI>50000
+		IF @KHUYENMAI>1
 		BEGIN
 			ROLLBACK TRAN
-			RAISERROR (N'KHUYỄN MÃI KHÔNG ĐƯỢC VƯỢT QUÁ 50000',16,1)
+			RAISERROR (N'KHUYỄN MÃI KHÔNG ĐƯỢC VƯỢT QUÁ 100%',16,1)
 		END
 END
-INSERT INTO HOADON (MaHD, MaSP, MaDH, SoLuong, TongTien, KhuyenMai)
-VALUES ('HD003', 'SP001', 'DH001', 2, 300000, 20000)
+
+INSERT INTO HOADON (MaDH, MaSP, SoLuong, KhuyenMai)
+VALUES ('DH001', 'SP002', 2, 1.2)
 
 DROP TRIGGER TG_5
 
@@ -289,7 +295,7 @@ AS
 BEGIN
 	SELECT TOP 1 MaKH, sum(SoLuong*GiaThanh) AS THANHTIEN
 	FROM DONHANG, HOADON, SANPHAM
-	WHERE DONHANG.MaDH=HOADON.MaDH and @NGAY=NgayDatHang AND SANPHAM.MaSP=HOADON.MaSP
+	WHERE DONHANG.MaDH=HOADON.MaDH and @NGAY=ThoiGianDatHang AND SANPHAM.MaSP=HOADON.MaSP
 	GROUP BY MaKH
 END
 
@@ -304,11 +310,50 @@ AS
 BEGIN
 	SELECT SUM(SoLuong*GiaThanh-KhuyenMai) AS TONGTIEN
 	FROM HOADON, SANPHAM, DONHANG
-	WHERE @NGAY=NgayDatHang AND HOADON.MaDH=DONHANG.MaDH AND SANPHAM.MaSP=HOADON.MaSP
+	WHERE @NGAY=ThoiGianDatHang AND HOADON.MaDH=DONHANG.MaDH AND SANPHAM.MaSP=HOADON.MaSP
 END
 
 EXEC PR_6 '2023-07-01';
 DROP PROC PR_6
---------------------------------------------
--->>>>THAO TÁC VỚI HÀM SỰ KIỆN VÀ XỬ LÝ<<<--
---------------------------------------------
+
+Go
+
+CREATE PROCEDURE PR_7
+@Thang INT
+AS
+BEGIN
+    SELECT TOP 10 SP.MaSP, SP.TenSP, SUM(HD.SoLuong) AS SoLuongBan
+    FROM SANPHAM SP
+    INNER JOIN HOADON HD ON SP.MaSP = HD.MaSP
+    WHERE MONTH(HD.MaDH) = @Thang
+    GROUP BY SP.MaSP, SP.TenSP
+    ORDER BY SoLuongBan DESC;
+END;
+EXEC PR_7 @Thang = 7; 
+
+------Nhập mã đơn hàng xuất ra thông tin khách hàng đã mua đơn hàng đó------
+GO
+CREATE PROCEDURE Cr_8
+    @MaDH char(10)
+AS
+BEGIN
+    SELECT KH.MaKH, KH.HoTen, KH.GioiTinh, KH.NgaySinh, KH.DiaChi, KH.SoDienThoai
+    FROM KHACHHANG KH
+    JOIN DONHANG DH ON KH.MaKH = DH.MaKH
+    WHERE DH.MaDH = @MaDH;
+END;
+EXEC Cr_8 @MaDH = 'DH001';
+
+----Nhập tháng Tính tổng số đơn hàng mà mỗi nhân viên đã tạo-----
+GO
+CREATE PROCEDURE Cr_9
+    @Thang int
+AS
+BEGIN
+    SELECT NV.MaNV, NV.HoTen, COUNT(DH.MaDH) AS TongSoDonHang
+    FROM NHANVIEN NV
+    LEFT JOIN DONHANG DH ON NV.MaNV = DH.MaNV
+    WHERE MONTH(DH.ThoiGianDatHang) = @Thang
+    GROUP BY NV.MaNV, NV.HoTen;
+END;
+EXEC Cr_9 @Thang = 7; 
